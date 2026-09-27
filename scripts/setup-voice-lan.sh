@@ -38,7 +38,7 @@ cat > "$NGINX_SITE" <<EOF
 server {
  listen 80;
  server_name _;
- return 301 https://$host$request_uri;
+ return 301 https://\$host\$request_uri;
 }
 server {
  listen 443 ssl;
@@ -47,15 +47,15 @@ server {
  index index.php;
  ssl_certificate $CERT_DIR/grewire.crt;
  ssl_certificate_key $CERT_DIR/grewire.key;
- location / { try_files $uri $uri/ /index.php?$query_string; }
- location /api/ { try_files $uri =404; }
- location /assets/ { try_files $uri =404; }
+ location / { try_files \$uri \$uri/ /index.php?\$query_string; }
+ location /api/ { try_files \$uri =404; }
+ location /assets/ { try_files \$uri =404; }
  location /ws/ {
    proxy_pass http://127.0.0.1:8081/;
    proxy_http_version 1.1;
-   proxy_set_header Upgrade $http_upgrade;
+   proxy_set_header Upgrade \$http_upgrade;
    proxy_set_header Connection "upgrade";
-   proxy_set_header Host $host;
+   proxy_set_header Host \$host;
    proxy_read_timeout 3600s;
    proxy_send_timeout 3600s;
  }
