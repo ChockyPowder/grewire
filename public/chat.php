@@ -25,7 +25,7 @@ $appName = (string) env('APP_NAME', 'Grewire');
         <div class="topbar-user">
             <span class="user-name"><?= htmlspecialchars($identity['username'], ENT_QUOTES, 'UTF-8') ?></span>
             <a href="#" onclick="return false">Chat</a>
-            <a href="#" onclick="return false">Logout</a>
+            <a href="/logout.php">Logout</a>
         </div>
     </header>
 
@@ -50,7 +50,7 @@ $appName = (string) env('APP_NAME', 'Grewire');
             </div>
 
             <div class="sidebar-account">
-                <div class="user-avatar">L</div>
+                <div class="user-avatar"><?= htmlspecialchars(strtoupper(substr($identity['username'], 0, 1)), ENT_QUOTES, 'UTF-8') ?></div>
                 <div>
                     <strong><?= htmlspecialchars($identity['username'], ENT_QUOTES, 'UTF-8') ?></strong>
                     <span>Online</span>
