@@ -1,0 +1,10 @@
+.voice-panel{display:flex;align-items:center;gap:18px;padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025)}
+.voice-panel.hidden{display:none}
+.voice-panel>div:first-child{display:flex;flex-direction:column;min-width:140px}
+.voice-panel>div:first-child span{font-size:12px;opacity:.65}
+.voice-panel #voice-participants{display:flex;gap:8px;flex:1;flex-wrap:wrap}
+.voice-participant{display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:8px;background:rgba(255,255,255,.05);font-size:13px}
+.voice-dot{width:8px;height:8px;border-radius:50%;background:#4ade80}
+.voice-you{font-size:10px;opacity:.5}
+.voice-panel button{margin-left:auto}
+.voice-panel audio{display:none}
