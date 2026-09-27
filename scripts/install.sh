@@ -128,6 +128,15 @@ EOF
     else
         log "Database schema already exists; migration skipped"
     fi
+
+    if [[ -f "$APP_DIR/database/migrations/0002_social.sql" ]]; then
+        if ! PGPASSWORD="$db_password" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='friendships'" | grep -q 1; then
+            log "Applying social database migration"
+            PGPASSWORD="$db_password" psql -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$APP_DIR/database/migrations/0002_social.sql"
+        else
+            log "Social schema already exists; migration skipped"
+        fi
+    fi
 }
 
 configure_nginx() {
