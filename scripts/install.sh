@@ -78,17 +78,17 @@ configure_database() {
     local db_password
     db_password="$(openssl rand -hex 24)"
 
-    if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'" | grep -q 1; then
-        sudo -u postgres createuser --no-createdb --no-createrole --no-superuser "$DB_USER"
+    if ! runuser -u postgres -- psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'" | grep -q 1; then
+        runuser -u postgres -- createuser --no-createdb --no-createrole --no-superuser "$DB_USER"
     fi
 
-    sudo -u postgres psql -v ON_ERROR_STOP=1 -c "ALTER ROLE $DB_USER WITH LOGIN PASSWORD '$db_password';"
+    runuser -u postgres -- psql -v ON_ERROR_STOP=1 -c "ALTER ROLE $DB_USER WITH LOGIN PASSWORD '$db_password';"
 
-    if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" | grep -q 1; then
-        sudo -u postgres createdb --owner="$DB_USER" "$DB_NAME"
+    if ! runuser -u postgres -- psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" | grep -q 1; then
+        runuser -u postgres -- createdb --owner="$DB_USER" "$DB_NAME"
     fi
 
-    sudo -u postgres psql -v ON_ERROR_STOP=1 -c "ALTER DATABASE $DB_NAME OWNER TO $DB_USER;"
+    runuser -u postgres -- psql -v ON_ERROR_STOP=1 -c "ALTER DATABASE $DB_NAME OWNER TO $DB_USER;"
 
     log "Writing application environment"
     local app_url="http://localhost"
@@ -182,7 +182,7 @@ configure_https() {
 health_check() {
     log "Running health checks"
     php -v | head -n 1
-    sudo -u postgres pg_isready
+    runuser -u postgres -- pg_isready
     curl -fsS http://127.0.0.1/api/health.php || true
     printf '\n'
 }
