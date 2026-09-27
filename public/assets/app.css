@@ -207,3 +207,11 @@ button{cursor:pointer}
 .directory-empty{padding:40px;text-align:center;color:#777}
 .directory-empty strong{display:block;color:#666;font-size:14px}
 .directory-empty span{display:block;margin-top:6px}
+
+.friends-toolbar{display:flex;gap:6px;padding:10px;border-bottom:1px solid #ccc;background:#f5f5f5}
+.friends-toolbar input{flex:1;min-width:0;padding:7px 8px;border:1px solid #aaa;background:#fff}
+.friends-section{border-bottom:1px solid #ddd}
+.friends-section:last-child{border-bottom:0}
+.friends-section-title{padding:7px 12px;background:#ededed;border-bottom:1px solid #ccc;color:#666;font-size:11px;font-weight:bold}
+.directory-item .directory-actions{display:flex;gap:5px}
+.directory-item .directory-actions button{padding:4px 7px}
