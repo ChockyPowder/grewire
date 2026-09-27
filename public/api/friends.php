@@ -16,26 +16,20 @@ try {
     );
 
     $stmt = db()->pdo()->prepare(
-        'SELECT DISTINCT
-            u.id,
-            u.username,
-            u.display_name,
-            u.created_at
+        'SELECT DISTINCT u.id, u.username, u.display_name, u.created_at
          FROM friendships f
-         INNER JOIN users u
-             ON u.id = CASE
-                 WHEN f.user_id = :user_id_a THEN f.friend_user_id
-                 ELSE f.user_id
-             END
-         WHERE (f.user_id = :user_id_b OR f.friend_user_id = :user_id_c)
-           AND f.status = :status
-         ORDER BY u.display_name ASC, u.username ASC'
+         INNER JOIN users u ON u.id = f.friend_user_id
+         WHERE f.user_id = ? AND f.status = ?
+         UNION
+         SELECT DISTINCT u.id, u.username, u.display_name, u.created_at
+         FROM friendships f
+         INNER JOIN users u ON u.id = f.user_id
+         WHERE f.friend_user_id = ? AND f.status = ?
+         ORDER BY display_name ASC, username ASC'
     );
     $stmt->execute([
-        'user_id_a' => $workspace['user']['id'],
-        'user_id_b' => $workspace['user']['id'],
-        'user_id_c' => $workspace['user']['id'],
-        'status' => 'accepted',
+        $workspace['user']['id'], 'accepted',
+        $workspace['user']['id'], 'accepted',
     ]);
 
     json_response([
