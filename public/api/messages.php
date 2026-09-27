@@ -15,7 +15,10 @@ function valid_uuid(string $value): bool
 function find_dev_user(): array
 {
     $identity = dev_identity();
-    $workspace = Grewire\DevWorkspace::ensure(db()->pdo(), (string) $identity['username']);
+    $workspace = Grewire\DevWorkspace::ensure(
+        db()->pdo(),
+        (string) $identity['username']
+    );
 
     return $workspace['user'];
 }
@@ -32,7 +35,7 @@ try {
 
     if ($method === 'GET') {
         $stmt = $pdo->prepare(
-            'SELECT
+            "SELECT
                 m.id,
                 m.body,
                 m.created_at,
@@ -41,7 +44,7 @@ try {
              LEFT JOIN users u ON u.id = m.author_user_id
              WHERE m.channel_id = :channel_id
              ORDER BY m.id ASC
-             LIMIT 200'
+             LIMIT 200"
         );
         $stmt->execute(['channel_id' => $channelId]);
 
@@ -61,7 +64,10 @@ try {
         $body = trim((string) ($input['body'] ?? ''));
 
         if ($body === '' || mb_strlen($body) > 4000) {
-            json_response(['ok' => false, 'error' => 'Message must be between 1 and 4000 characters.'], 422);
+            json_response(
+                ['ok' => false, 'error' => 'Message must be between 1 and 4000 characters.'],
+                422
+            );
         }
 
         $channelStmt = $pdo->prepare(
@@ -75,7 +81,10 @@ try {
         }
 
         if ($channel['kind'] !== 'text') {
-            json_response(['ok' => false, 'error' => 'Messages can only be sent to text channels.'], 422);
+            json_response(
+                ['ok' => false, 'error' => 'Messages can only be sent to text channels.'],
+                422
+            );
         }
 
         $user = find_dev_user();
