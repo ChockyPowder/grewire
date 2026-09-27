@@ -22,7 +22,27 @@ function load_env(string $path): void
 function env(string $key, mixed $default = null): mixed { $value = getenv($key); return $value === false ? $default : $value; }
 function env_bool(string $key, bool $default = false): bool { return in_array(strtolower((string) env($key, $default ? 'true' : 'false')), ['1','true','yes','on'], true); }
 function json_response(array $payload, int $status = 200): never { http_response_code($status); header('Content-Type: application/json; charset=utf-8'); header('Cache-Control: no-store'); echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); exit; }
+
 load_env(GREWIRE_ROOT . '/.env');
-spl_autoload_register(static function (string $class): void { $prefix = 'Grewire\\\\'; if (!str_starts_with($class, $prefix)) return; $file = GREWIRE_ROOT . '/app/' . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php'; if (is_file($file)) require_once $file; });
-function db(): Database { static $database; return $database ??= new Database(['host'=>(string)env('DB_HOST','127.0.0.1'),'port'=>(int)env('DB_PORT',5432),'name'=>(string)env('DB_NAME','grewire'),'user'=>(string)env('DB_USER','grewire'),'password'=>(string)env('DB_PASSWORD','')]); }
-function dev_identity(): array { return ['id'=>null,'username'=>(string)env('DEV_USERNAME','local-user'),'authenticated'=>false]; }
+
+spl_autoload_register(static function (string $class): void {
+    $prefix = 'Grewire\\';
+    if (!str_starts_with($class, $prefix)) return;
+    $file = GREWIRE_ROOT . '/app/' . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
+    if (is_file($file)) require_once $file;
+});
+
+function db(): Database {
+    static $database;
+    return $database ??= new Database([
+        'host'=>(string)env('DB_HOST','127.0.0.1'),
+        'port'=>(int)env('DB_PORT',5432),
+        'name'=>(string)env('DB_NAME','grewire'),
+        'user'=>(string)env('DB_USER','grewire'),
+        'password'=>(string)env('DB_PASSWORD','')
+    ]);
+}
+
+function dev_identity(): array {
+    return ['id'=>null,'username'=>(string)env('DEV_USERNAME','local-user'),'authenticated'=>false];
+}
