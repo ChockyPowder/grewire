@@ -133,6 +133,7 @@ $appName = (string) env('APP_NAME', 'Grewire');
     </div>
 </div>
 
+<script>window.GREWIRE_USER_NAME=<?= json_encode($identity['username'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;</script>
 <script src="/assets/app.js?v=2026092706" defer></script>
 <script src="/assets/voice.js?v=2026092706" defer></script>
 </body>
