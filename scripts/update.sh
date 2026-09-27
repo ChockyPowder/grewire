@@ -58,7 +58,7 @@ apply_migrations() {
   fi
 }
 
-fix_permissions {
+fix_permissions() {
   log "Fixing application permissions"
   chown -R root:"$APP_GROUP" "$APP_DIR"
   find "$APP_DIR" -type d -exec chmod 0750 {} +
