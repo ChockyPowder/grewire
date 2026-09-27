@@ -12,83 +12,97 @@ $appName = (string) env('APP_NAME', 'Grewire');
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= htmlspecialchars($appName, ENT_QUOTES, 'UTF-8') ?></title>
-    <link rel="stylesheet" href="/assets/app.css?v=2026092703">
-    <link rel="stylesheet" href="/assets/voice.css?v=2026092703">
+    <link rel="stylesheet" href="/assets/app.css?v=2026092704">
+    <link rel="stylesheet" href="/assets/voice.css?v=2026092704">
 </head>
 <body>
-<div class="discord-shell">
-    <aside class="server-rail" aria-label="Servers">
-        <button class="server-icon active" title="Grewire">G</button>
-        <button class="server-icon" title="Add server">+</button>
-    </aside>
-
-    <aside class="channel-sidebar">
-        <button class="workspace-switcher" type="button">
-            <span><?= htmlspecialchars($appName, ENT_QUOTES, 'UTF-8') ?></span>
-            <span class="chevron">⌄</span>
-        </button>
-
-        <div class="channel-section">
-            <div class="channel-section-title">
-                <span>TEXT CHANNELS</span>
-                <button type="button" title="Add channel">+</button>
-            </div>
-            <nav id="text-channels" aria-label="Text channels"></nav>
+<div class="app-shell">
+    <header class="topbar">
+        <div class="brand-lockup">
+            <div><div class="brand">Grewire</div></div>
+            <div class="brand-tagline">Connect with Grewire</div>
         </div>
-
-        <div class="channel-section">
-            <div class="channel-section-title">
-                <span>VOICE CHANNELS</span>
-                <button type="button" title="Add channel">+</button>
-            </div>
-            <nav id="voice-channels" aria-label="Voice channels"></nav>
+        <div class="topbar-user">
+            <span class="user-name"><?= htmlspecialchars($identity['username'], ENT_QUOTES, 'UTF-8') ?></span>
+            <a href="#" onclick="return false">Chat</a>
+            <a href="#" onclick="return false">Logout</a>
         </div>
+    </header>
 
-        <div class="current-user">
-            <div class="user-avatar">L</div>
-            <div class="current-user-info">
-                <strong><?= htmlspecialchars($identity['username'], ENT_QUOTES, 'UTF-8') ?></strong>
-                <span>Online</span>
+    <nav class="subnav">
+        <a class="active" href="#" onclick="return false">Chat</a>
+        <a href="#" onclick="return false">Voice</a>
+        <a href="#" onclick="return false">Servers</a>
+    </nav>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-title">Workspace</div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-heading">Text Channels</div>
+                <nav id="text-channels" aria-label="Text channels"></nav>
             </div>
-            <button class="user-action" type="button" title="Settings">⚙</button>
-        </div>
-    </aside>
 
-    <main class="chat-area">
-        <header class="chat-header">
-            <div class="chat-channel-name">
-                <span class="channel-symbol">#</span>
-                <strong id="channel-title">general</strong>
+            <div class="sidebar-section">
+                <div class="sidebar-heading">Voice Channels</div>
+                <nav id="voice-channels" aria-label="Voice channels"></nav>
             </div>
-            <div class="chat-actions">
-                <button type="button" title="Notifications">◔</button>
-                <button type="button" title="Pinned messages">⌑</button>
-                <button type="button" title="Members">☷</button>
-            </div>
-        </header>
 
-        <section class="messages" id="messages"></section>
-
-        <section id="voice-panel" class="voice-panel hidden">
-            <div class="voice-panel-main">
+            <div class="sidebar-account">
+                <div class="user-avatar">L</div>
                 <div>
-                    <strong>Voice Connected</strong>
-                    <span id="voice-status">Connecting…</span>
+                    <strong><?= htmlspecialchars($identity['username'], ENT_QUOTES, 'UTF-8') ?></strong>
+                    <span>Online</span>
                 </div>
-                <div id="voice-participants"></div>
+                <button class="user-action" type="button" title="Settings">⚙</button>
             </div>
-            <button class="voice-leave" id="voice-join" type="button">Join voice</button>
-        </section>
+        </aside>
 
-        <form class="composer" id="message-form">
-            <button class="composer-add" type="button" title="Add attachment">+</button>
-            <input id="message-input" maxlength="2000" autocomplete="off" placeholder="Message #general…" aria-label="Message">
-            <button class="composer-emoji" type="button" title="Emoji">☺</button>
-        </form>
-    </main>
+        <main class="main">
+            <div class="page-title">
+                <div>
+                    <h1>Grewire</h1>
+                    <div class="page-subtitle">Your conversations</div>
+                </div>
+                <a class="btn btn-primary" href="#" onclick="return false">+ New Channel</a>
+            </div>
+
+            <div class="chat-panel">
+                <div class="panel-header">
+                    <div class="panel-header-left">
+                        <span>#</span>
+                        <strong id="channel-title">general</strong>
+                    </div>
+                    <span class="panel-header-meta">Chat</span>
+                </div>
+
+                <div class="chat-body">
+                    <section class="messages" id="messages"></section>
+
+                    <section id="voice-panel" class="voice-panel hidden">
+                        <div class="voice-panel-main">
+                            <div>
+                                <strong>Voice Connected</strong>
+                                <span id="voice-status">Connecting…</span>
+                            </div>
+                            <div id="voice-participants"></div>
+                        </div>
+                        <button class="voice-leave" id="voice-join" type="button">Join voice</button>
+                    </section>
+
+                    <form class="composer" id="message-form">
+                        <button class="composer-add" type="button" title="Add attachment">+</button>
+                        <input id="message-input" maxlength="2000" autocomplete="off" placeholder="Message #general…" aria-label="Message">
+                        <button class="composer-emoji" type="button" title="Emoji">☺</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
 </div>
 
-<script src="/assets/app.js?v=2026092703" defer></script>
-<script src="/assets/voice.js?v=2026092703" defer></script>
+<script src="/assets/app.js?v=2026092704" defer></script>
+<script src="/assets/voice.js?v=2026092704" defer></script>
 </body>
 </html>
