@@ -15,28 +15,24 @@ final class DevWorkspace
 
         try {
             $userStmt = $pdo->prepare(
-                'INSERT INTO users (username, display_name)
-                 VALUES (:username, :display_name)
-                 ON CONFLICT (username) DO NOTHING'
-            );
-            $userStmt->execute([
-                'username' => $username,
-                'display_name' => $username,
-            ]);
-
-            $userLookup = $pdo->prepare(
                 'SELECT id, username, display_name FROM users WHERE username = :username LIMIT 1'
             );
-            $userLookup->execute(['username' => $username]);
-            $user = $userLookup->fetch();
+            $userStmt->execute(['username' => $username]);
+            $user = $userStmt->fetch();
 
             if (!$user) {
-                throw new RuntimeException('Unable to create development user.');
+                throw new RuntimeException('User account not found.');
             }
 
-            $serverStmt = $pdo->query(
-                "SELECT id, name FROM servers ORDER BY created_at ASC, id ASC LIMIT 1"
+            $serverStmt = $pdo->prepare(
+                'SELECT s.id, s.name
+                 FROM servers s
+                 INNER JOIN server_members sm ON sm.server_id = s.id
+                 WHERE sm.user_id = :user_id
+                 ORDER BY s.created_at ASC, s.id ASC
+                 LIMIT 1'
             );
+            $serverStmt->execute(['user_id' => $user['id']]);
             $server = $serverStmt->fetch();
 
             if (!$server) {
@@ -46,40 +42,41 @@ final class DevWorkspace
                      RETURNING id, name'
                 );
                 $insertServer->execute([
-                    'name' => 'Grewire Workspace',
+                    'name' => $user['display_name'] . "'s Server",
                     'owner' => $user['id'],
                 ]);
                 $server = $insertServer->fetch();
-            }
 
-            $memberStmt = $pdo->prepare(
-                'INSERT INTO server_members (server_id, user_id)
-                 VALUES (:server_id, :user_id)
-                 ON CONFLICT DO NOTHING'
-            );
-            $memberStmt->execute([
-                'server_id' => $server['id'],
-                'user_id' => $user['id'],
-            ]);
+                if (!$server) {
+                    throw new RuntimeException('Unable to create your initial server.');
+                }
 
-            $channelStmt = $pdo->prepare(
-                'INSERT INTO channels (server_id, name, kind, position)
-                 VALUES (:server_id, :name, :kind, :position)
-                 ON CONFLICT (server_id, name)
-                 DO UPDATE SET kind = EXCLUDED.kind, position = EXCLUDED.position'
-            );
-
-            foreach ([
-                ['general', 'text', 0],
-                ['development', 'text', 1],
-                ['Lobby voice', 'voice', 2],
-            ] as $channel) {
-                $channelStmt->execute([
+                $memberStmt = $pdo->prepare(
+                    'INSERT INTO server_members (server_id, user_id)
+                     VALUES (:server_id, :user_id)
+                     ON CONFLICT DO NOTHING'
+                );
+                $memberStmt->execute([
                     'server_id' => $server['id'],
-                    'name' => $channel[0],
-                    'kind' => $channel[1],
-                    'position' => $channel[2],
+                    'user_id' => $user['id'],
                 ]);
+
+                $channelStmt = $pdo->prepare(
+                    'INSERT INTO channels (server_id, name, kind, position)
+                     VALUES (:server_id, :name, :kind, :position)'
+                );
+
+                foreach ([
+                    ['general', 'text', 0],
+                    ['Lobby voice', 'voice', 1],
+                ] as $channel) {
+                    $channelStmt->execute([
+                        'server_id' => $server['id'],
+                        'name' => $channel[0],
+                        'kind' => $channel[1],
+                        'position' => $channel[2],
+                    ]);
+                }
             }
 
             $pdo->commit();
@@ -88,7 +85,7 @@ final class DevWorkspace
                 'user' => $user,
                 'server' => $server,
             ];
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             $pdo->rollBack();
             throw $exception;
         }
