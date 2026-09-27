@@ -12,7 +12,7 @@ $appName = (string) env('APP_NAME', 'Grewire');
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= htmlspecialchars($appName, ENT_QUOTES, 'UTF-8') ?></title>
-    <link rel="stylesheet" href="/assets/app.css?v=2026092706">
+    <link rel="stylesheet" href="/assets/app.css?v=2026092707">
     <link rel="stylesheet" href="/assets/voice.css?v=2026092706">
 </head>
 <body>
@@ -37,8 +37,9 @@ $appName = (string) env('APP_NAME', 'Grewire');
 
     <div class="layout">
         <aside class="sidebar">
-            <div class="sidebar-title">Workspace</div>
+            <div class="sidebar-title" id="sidebar-title">Workspace</div>
 
+            <div id="sidebar-sections">
             <div class="sidebar-section">
                 <div class="sidebar-heading">Text Channels</div>
                 <nav id="text-channels" aria-label="Text channels"></nav>
@@ -47,6 +48,7 @@ $appName = (string) env('APP_NAME', 'Grewire');
             <div class="sidebar-section">
                 <div class="sidebar-heading">Voice Channels</div>
                 <nav id="voice-channels" aria-label="Voice channels"></nav>
+            </div>
             </div>
 
             <div class="sidebar-account">
@@ -105,7 +107,7 @@ $appName = (string) env('APP_NAME', 'Grewire');
                         <span>#</span>
                         <strong id="channel-title">general</strong>
                     </div>
-                    <span class="panel-header-meta">Chat</span>
+                    <span class="panel-header-meta" id="chat-panel-type">Chat</span>
                 </div>
 
                 <div class="chat-body">
