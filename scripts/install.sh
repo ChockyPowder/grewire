@@ -14,8 +14,8 @@ DB_PORT="5432"
 
 DOMAIN="_"
 CERTBOT_EMAIL=""
-if [[ -n "$1" ]]; then DOMAIN="$1"; fi
-if [[ -n "$2" ]]; then CERTBOT_EMAIL="$2"; fi
+if [[ -n "${1:-}" ]]; then DOMAIN="$1"; fi
+if [[ -n "${2:-}" ]]; then CERTBOT_EMAIL="$2"; fi
 
 log() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 die() { printf '\n\033[1;31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
@@ -69,7 +69,7 @@ checkout_app() {
 
     if [[ -f "$APP_DIR/composer.json" ]]; then
         log "Installing PHP dependencies"
-        su -s /bin/bash -c "cd '$APP_DIR' && composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader" "$APP_USER"
+        composer install --working-dir="$APP_DIR" --no-dev --prefer-dist --no-interaction --optimize-autoloader
     fi
 }
 
@@ -91,7 +91,10 @@ configure_database() {
     runuser -u postgres -- psql -v ON_ERROR_STOP=1 -c "ALTER DATABASE $DB_NAME OWNER TO $DB_USER;"
 
     log "Writing application environment"
-    local app_url="http://localhost"
+    local lan_ip
+    lan_ip="$(hostname -I | awk '{print $1}')"
+    [[ -n "$lan_ip" ]] || lan_ip="127.0.0.1"
+    local app_url="http://$lan_ip"
     if [[ "$DOMAIN" != "_" ]]; then app_url="http://$DOMAIN"; fi
 
     cat > "$APP_DIR/.env" <<EOF
