@@ -1,6 +1,6 @@
 {
   "name": "chockypowder/grewire",
-  "description": "Private invite-only community and real-time communication platform.",
+  "description": "Private invite-only communication platform.",
   "type": "project",
   "license": "Proprietary",
   "require": {
@@ -8,7 +8,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Grewire\\\\": "app/"
+      "Grewire\\": "app/"
     }
   },
   "scripts": {
