@@ -146,6 +146,15 @@ EOF
         else
             log "Authentication schema already exists; migration skipped"
         fi
+
+    if [[ -f "$APP_DIR/database/migrations/0004_dm.sql" ]]; then
+        if ! PGPASSWORD="$db_password" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='dm_conversations'" | grep -q 1; then
+            log "Applying direct message database migration"
+            PGPASSWORD="$db_password" psql -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$APP_DIR/database/migrations/0004_dm.sql"
+        else
+            log "Direct message schema already exists; migration skipped"
+        fi
+    fi
     fi
 }
 
