@@ -2,7 +2,6 @@
 set -Eeuo pipefail
 
 APP_DIR="/var/www/grewire"
-REPO_URL="https://github.com/ChockyPowder/grewire.git"
 BRANCH="main"
 APP_GROUP="www-data"
 
@@ -17,7 +16,6 @@ require_root() {
 update_source() {
   log "Updating Grewire source"
   [[ -d "$APP_DIR/.git" ]] || die "$APP_DIR is not a Git checkout"
-
   git -C "$APP_DIR" fetch origin "$BRANCH"
   git -C "$APP_DIR" checkout "$BRANCH"
   git -C "$APP_DIR" reset --hard "origin/$BRANCH"
@@ -27,6 +25,26 @@ install_dependencies() {
   if [[ -f "$APP_DIR/composer.json" ]]; then
     log "Refreshing PHP dependencies"
     composer install --working-dir="$APP_DIR" --no-dev --prefer-dist --no-interaction --optimize-autoloader
+  fi
+}
+
+apply_migrations() {
+  log "Applying pending database migrations"
+  [[ -f "$APP_DIR/.env" ]] || die "Missing $APP_DIR/.env"
+
+  set -a
+  . "$APP_DIR/.env"
+  set +a
+
+  if [[ -f "$APP_DIR/database/migrations/0002_social.sql" ]]; then
+    local exists
+    exists="$(PGPASSWORD="${DB_PASSWORD:-}" psql       -h "${DB_HOST:-127.0.0.1}"       -p "${DB_PORT:-5432}"       -U "${DB_USER:-grewire}"       -d "${DB_NAME:-grewire}"       -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='friendships'")"
+
+    if [[ "$exists" != "1" ]]; then
+      PGPASSWORD="${DB_PASSWORD:-}" psql -v ON_ERROR_STOP=1         -h "${DB_HOST:-127.0.0.1}"         -p "${DB_PORT:-5432}"         -U "${DB_USER:-grewire}"         -d "${DB_NAME:-grewire}"         -f "$APP_DIR/database/migrations/0002_social.sql"
+    else
+      log "Social schema already exists; migration skipped"
+    fi
   fi
 }
 
@@ -72,6 +90,7 @@ main() {
   require_root
   update_source
   install_dependencies
+  apply_migrations
   fix_permissions
   restart_services
   health_check
