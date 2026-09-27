@@ -56,6 +56,18 @@ apply_migrations() {
       log "Authentication schema already exists; migration skipped"
     fi
   fi
+
+  if [[ -f "$APP_DIR/database/migrations/0004_dm.sql" ]]; then
+    local dm_exists
+    dm_exists="$(PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-127.0.0.1}" -p "${DB_PORT:-5432}" -U "${DB_USER:-grewire}" -d "${DB_NAME:-grewire}" -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='dm_conversations'")"
+    if [[ "$dm_exists" != "1" ]]; then
+      log "Applying direct message database migration"
+      PGPASSWORD="${DB_PASSWORD:-}" psql -v ON_ERROR_STOP=1 -h "${DB_HOST:-127.0.0.1}" -p "${DB_PORT:-5432}" -U "${DB_USER:-grewire}" -d "${DB_NAME:-grewire}" -f "$APP_DIR/database/migrations/0004_dm.sql"
+    else
+      log "Direct message schema already exists; migration skipped"
+    fi
+  fi
+
 }
 
 fix_permissions() {
