@@ -5,8 +5,22 @@ const textNav=document.querySelector('#text-channels');
 const voiceNav=document.querySelector('#voice-channels');
 const channelTitle=document.querySelector('#channel-title');
 
+const chatView=document.querySelector('#chat-view');
+const serversView=document.querySelector('#servers-view');
+const friendsView=document.querySelector('#friends-view');
+const serverList=document.querySelector('#server-list');
+const friendList=document.querySelector('#friend-list');
+const pageHeading=document.querySelector('#page-heading');
+const pageSubtitle=document.querySelector('#page-subtitle');
+const pageAction=document.querySelector('#page-action');
+
+const navChat=document.querySelector('#nav-chat');
+const navServers=document.querySelector('#nav-servers');
+const navFriends=document.querySelector('#nav-friends');
+
 let channels=[];
 let activeChannel=null;
+let activeServerId=null;
 let refreshTimer=null;
 
 function renderMessages(items){
@@ -34,11 +48,32 @@ function renderMessages(items){
   }
 
   messages.scrollTop=messages.scrollHeight;
-  updateMessageCount(items.length);
 }
 
-function updateMessageCount(count){
-  document.title=(activeChannel?('# '+activeChannel.name+' · '):'')+'Grewire';
+function setNavActive(active){
+  [navChat,navServers,navFriends].forEach(link=>link.classList.remove('active'));
+  active.classList.add('active');
+}
+
+function showChatView(){
+  chatView.classList.remove('hidden');
+  serversView.classList.add('hidden');
+  friendsView.classList.add('hidden');
+  pageHeading.textContent='Grewire';
+  pageSubtitle.textContent='Your conversations';
+  pageAction.textContent='+ New Channel';
+  setNavActive(navChat);
+}
+
+function showDirectory(view, heading, subtitle, action, nav){
+  chatView.classList.add('hidden');
+  serversView.classList.add('hidden');
+  friendsView.classList.add('hidden');
+  view.classList.remove('hidden');
+  pageHeading.textContent=heading;
+  pageSubtitle.textContent=subtitle;
+  pageAction.textContent=action;
+  setNavActive(nav);
 }
 
 function renderChannels(){
@@ -53,7 +88,6 @@ function renderChannels(){
     button.innerHTML='<span class="channel-icon"></span><span class="channel-name"></span>';
     button.querySelector('.channel-icon').textContent=channel.kind==='voice'?'◉':'#';
     button.querySelector('.channel-name').textContent=channel.name;
-
     button.addEventListener('click',()=>selectChannel(channel));
 
     if(channel.kind==='voice') voiceNav.appendChild(button);
@@ -91,6 +125,7 @@ async function selectChannel(channel){
   form.querySelector('.composer-emoji').disabled=!isText;
 
   renderChannels();
+  showChatView();
 
   if(window.setVoiceChannel){
     window.setVoiceChannel(channel);
@@ -101,6 +136,25 @@ async function selectChannel(channel){
   }else{
     messages.innerHTML='<div class="voice-placeholder"><div class="voice-placeholder-icon">◉</div><strong>'+channel.name+'</strong><span>Join the voice channel below to start talking.</span></div>';
   }
+}
+
+async function loadServerChannels(serverId){
+  const url='/api/channels.php'+(serverId?'?server_id='+encodeURIComponent(serverId):'');
+  const response=await fetch(url,{headers:{Accept:'application/json'},cache:'no-store'});
+  const payload=await response.json();
+
+  if(!response.ok || !payload.ok){
+    throw new Error(payload.error||'Unable to load server');
+  }
+
+  activeServerId=payload.workspace.id;
+  channels=payload.channels||[];
+  if(!channels.length) throw new Error('No channels are available in this server.');
+
+  renderChannels();
+
+  const firstText=channels.find(channel=>channel.kind==='text')||channels[0];
+  await selectChannel(firstText);
 }
 
 async function loadWorkspace(){
@@ -115,6 +169,7 @@ async function loadWorkspace(){
     throw new Error(payload.error||'Unable to load workspace');
   }
 
+  activeServerId=payload.workspace.id;
   channels=payload.channels||[];
   if(!channels.length) throw new Error('No channels are available.');
 
@@ -124,6 +179,90 @@ async function loadWorkspace(){
   await selectChannel(firstText);
 }
 
+async function loadServers(){
+  serverList.innerHTML='<div class="directory-empty">Loading servers…</div>';
+
+  const response=await fetch('/api/servers.php',{headers:{Accept:'application/json'},cache:'no-store'});
+  const payload=await response.json();
+
+  if(!response.ok || !payload.ok){
+    throw new Error(payload.error||'Unable to load servers');
+  }
+
+  serverList.innerHTML='';
+
+  if(!payload.servers.length){
+    serverList.innerHTML='<div class="directory-empty"><strong>No servers yet</strong><span>You are not in any servers.</span></div>';
+    return;
+  }
+
+  for(const server of payload.servers){
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='directory-item'+(server.id===activeServerId?' active':'');
+    button.innerHTML='<span class="directory-icon"></span><span class="directory-copy"><strong></strong><span>Server</span></span><span class="directory-arrow">›</span>';
+    button.querySelector('.directory-icon').textContent=(server.name||'S').slice(0,1).toUpperCase();
+    button.querySelector('.directory-copy strong').textContent=server.name;
+    button.addEventListener('click',async()=>{
+      try{
+        await loadServerChannels(server.id);
+      }catch(error){
+        console.error(error);
+        alert(error.message);
+      }
+    });
+    serverList.appendChild(button);
+  }
+}
+
+async function loadFriends(){
+  friendList.innerHTML='<div class="directory-empty">Loading friends…</div>';
+
+  const response=await fetch('/api/friends.php',{headers:{Accept:'application/json'},cache:'no-store'});
+  const payload=await response.json();
+
+  if(!response.ok || !payload.ok){
+    throw new Error(payload.error||'Unable to load friends');
+  }
+
+  friendList.innerHTML='';
+
+  if(!payload.friends.length){
+    friendList.innerHTML='<div class="directory-empty"><strong>No friends added yet</strong><span>Your added friends will appear here.</span></div>';
+    return;
+  }
+
+  for(const friend of payload.friends){
+    const item=document.createElement('div');
+    item.className='directory-item';
+    item.innerHTML='<span class="directory-icon"></span><span class="directory-copy"><strong></strong><span class="friend-username"></span></span>';
+    item.querySelector('.directory-icon').textContent=(friend.display_name||friend.username||'F').slice(0,1).toUpperCase();
+    item.querySelector('.directory-copy strong').textContent=friend.display_name||friend.username;
+    item.querySelector('.friend-username').textContent='@'+friend.username;
+    friendList.appendChild(item);
+  }
+}
+
+navChat.addEventListener('click',async event=>{
+  event.preventDefault();
+  showChatView();
+  if(activeChannel) await selectChannel(activeChannel);
+});
+
+navServers.addEventListener('click',async event=>{
+  event.preventDefault();
+  showDirectory(serversView,'Servers','Servers you are in','+ Create Server',navServers);
+  try{ await loadServers(); }
+  catch(error){ serverList.innerHTML='<div class="directory-empty"><strong>Unable to load servers</strong><span>'+String(error.message||error)+'</span></div>'; }
+});
+
+navFriends.addEventListener('click',async event=>{
+  event.preventDefault();
+  showDirectory(friendsView,'Friends','Your added friends','+ Add Friend',navFriends);
+  try{ await loadFriends(); }
+  catch(error){ friendList.innerHTML='<div class="directory-empty"><strong>Unable to load friends</strong><span>'+String(error.message||error)+'</span></div>'; }
+});
+
 form.addEventListener('submit',async event=>{
   event.preventDefault();
 
@@ -132,16 +271,12 @@ form.addEventListener('submit',async event=>{
   const body=input.value.trim();
   if(!body) return;
 
-  const sendButton=form.querySelector('.composer-add');
   input.disabled=true;
 
   try{
     const response=await fetch('/api/messages.php?channel_id='+encodeURIComponent(activeChannel.id),{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        Accept:'application/json'
-      },
+      headers:{'Content-Type':'application/json',Accept:'application/json'},
       body:JSON.stringify({body})
     });
 
@@ -158,7 +293,6 @@ form.addEventListener('submit',async event=>{
     alert(error.message);
   }finally{
     input.disabled=false;
-    void sendButton;
     input.focus();
   }
 });
