@@ -46,9 +46,19 @@ apply_migrations() {
       log "Social schema already exists; migration skipped"
     fi
   fi
+
+  if [[ -f "$APP_DIR/database/migrations/0003_auth.sql" ]]; then
+    local auth_exists
+    auth_exists="$(PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-127.0.0.1}" -p "${DB_PORT:-5432}" -U "${DB_USER:-grewire}" -d "${DB_NAME:-grewire}" -tAc "SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='users' AND column_name='password_hash'")"
+    if [[ "$auth_exists" != "1" ]]; then
+      PGPASSWORD="${DB_PASSWORD:-}" psql -v ON_ERROR_STOP=1 -h "${DB_HOST:-127.0.0.1}" -p "${DB_PORT:-5432}" -U "${DB_USER:-grewire}" -d "${DB_NAME:-grewire}" -f "$APP_DIR/database/migrations/0003_auth.sql"
+    else
+      log "Authentication schema already exists; migration skipped"
+    fi
+  fi
 }
 
-fix_permissions() {
+fix_permissions {
   log "Fixing application permissions"
   chown -R root:"$APP_GROUP" "$APP_DIR"
   find "$APP_DIR" -type d -exec chmod 0750 {} +
