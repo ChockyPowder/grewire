@@ -10,6 +10,10 @@ const serversView=document.querySelector('#servers-view');
 const friendsView=document.querySelector('#friends-view');
 const serverList=document.querySelector('#server-list');
 const friendList=document.querySelector('#friend-list');
+const friendSearch=document.querySelector('#friend-search');
+const friendSearchButton=document.querySelector('#friend-search-button');
+const friendSearchList=document.querySelector('#friend-search-list');
+const friendRequestList=document.querySelector('#friend-request-list');
 const pageHeading=document.querySelector('#page-heading');
 const pageSubtitle=document.querySelector('#page-subtitle');
 const pageAction=document.querySelector('#page-action');
@@ -215,33 +219,98 @@ async function loadServers(){
   }
 }
 
-async function loadFriends(){
-  friendList.innerHTML='<div class="directory-empty">Loading friends…</div>';
+async function friendAction(action, data={}){
+  const response=await fetch('/api/friends.php',{
+    method:'POST',
+    headers:{'Content-Type':'application/json',Accept:'application/json'},
+    body:JSON.stringify({action,...data})
+  });
+  const payload=await response.json();
+  if(!response.ok || !payload.ok) throw new Error(payload.error||'Friend action failed');
+  return payload;
+}
 
-  const response=await fetch('/api/friends.php',{headers:{Accept:'application/json'},cache:'no-store'});
+function directoryUser(item, actionHtml=''){
+  const row=document.createElement('div');
+  row.className='directory-item';
+  row.innerHTML='<span class="directory-icon"></span><span class="directory-copy"><strong></strong><span></span></span>'+actionHtml;
+  row.querySelector('.directory-icon').textContent=(item.display_name||item.username||'U').slice(0,1).toUpperCase();
+  row.querySelector('.directory-copy strong').textContent=item.display_name||item.username;
+  row.querySelector('.directory-copy span').textContent='@'+item.username;
+  return row;
+}
+
+async function loadFriends(search=''){
+  friendList.innerHTML='<div class="directory-empty">Loading friends…</div>';
+  friendRequestList.innerHTML='<div class="directory-empty">Loading requests…</div>';
+
+  const url='/api/friends.php'+(search?'?q='+encodeURIComponent(search):'');
+  const response=await fetch(url,{headers:{Accept:'application/json'},cache:'no-store'});
   const payload=await response.json();
 
-  if(!response.ok || !payload.ok){
-    throw new Error(payload.error||'Unable to load friends');
-  }
+  if(!response.ok || !payload.ok) throw new Error(payload.error||'Unable to load friends');
 
   friendList.innerHTML='';
+  friendRequestList.innerHTML='';
+  friendSearchList.innerHTML='';
 
-  if(!payload.friends.length){
-    friendList.innerHTML='<div class="directory-empty"><strong>No friends added yet</strong><span>Your added friends will appear here.</span></div>';
-    return;
+  if(payload.search.length){
+    for(const person of payload.search){
+      const row=directoryUser(person,'<span class="directory-actions"><button class="btn" type="button">Add Friend</button></span>');
+      row.querySelector('button').addEventListener('click',async()=>{
+        try{
+          await friendAction('send',{user_id:person.id});
+          await loadFriends(friendSearch.value.trim());
+        }catch(error){ alert(error.message); }
+      });
+      friendSearchList.appendChild(row);
+    }
+  }else{
+    friendSearchList.innerHTML='<div class="directory-empty"><strong>Search for someone</strong><span>Enter a username or display name above.</span></div>';
   }
 
-  for(const friend of payload.friends){
-    const item=document.createElement('div');
-    item.className='directory-item';
-    item.innerHTML='<span class="directory-icon"></span><span class="directory-copy"><strong></strong><span class="friend-username"></span></span>';
-    item.querySelector('.directory-icon').textContent=(friend.display_name||friend.username||'F').slice(0,1).toUpperCase();
-    item.querySelector('.directory-copy strong').textContent=friend.display_name||friend.username;
-    item.querySelector('.friend-username').textContent='@'+friend.username;
-    friendList.appendChild(item);
+  if(payload.incoming.length || payload.outgoing.length){
+    for(const request of payload.incoming){
+      const row=directoryUser(request,'<span class="directory-actions"><button class="btn btn-primary" type="button">Accept</button><button class="btn" type="button">Decline</button></span>');
+      const buttons=row.querySelectorAll('button');
+      buttons[0].addEventListener('click',async()=>{try{await friendAction('accept',{request_id:request.id});await loadFriends(friendSearch.value.trim());}catch(error){alert(error.message);}});
+      buttons[1].addEventListener('click',async()=>{try{await friendAction('decline',{request_id:request.id});await loadFriends(friendSearch.value.trim());}catch(error){alert(error.message);}});
+      friendRequestList.appendChild(row);
+    }
+    for(const request of payload.outgoing){
+      const row=directoryUser(request,'<span class="directory-actions"><button class="btn" type="button">Cancel</button></span>');
+      row.querySelector('button').addEventListener('click',async()=>{try{await friendAction('cancel',{request_id:request.id});await loadFriends(friendSearch.value.trim());}catch(error){alert(error.message);}});
+      friendRequestList.appendChild(row);
+    }
+  }else{
+    friendRequestList.innerHTML='<div class="directory-empty"><strong>No pending requests</strong><span>Incoming and outgoing requests will appear here.</span></div>';
+  }
+
+  if(payload.friends.length){
+    for(const friend of payload.friends){
+      const row=directoryUser(friend,'<span class="directory-actions"><button class="btn" type="button">Remove</button></span>');
+      row.querySelector('button').addEventListener('click',async()=>{
+        if(!confirm('Remove this friend?')) return;
+        try{await friendAction('remove',{user_id:friend.id});await loadFriends(friendSearch.value.trim());}catch(error){alert(error.message);}
+      });
+      friendList.appendChild(row);
+    }
+  }else{
+    friendList.innerHTML='<div class="directory-empty"><strong>No friends added yet</strong><span>Search for someone above to send a friend request.</span></div>';
   }
 }
+
+friendSearchButton?.addEventListener('click',async()=>{
+  try{ await loadFriends(friendSearch.value.trim()); }
+  catch(error){ alert(error.message); }
+});
+
+friendSearch?.addEventListener('keydown',event=>{
+  if(event.key==='Enter'){
+    event.preventDefault();
+    friendSearchButton?.click();
+  }
+});
 
 navChat.addEventListener('click',async event=>{
   event.preventDefault();
@@ -258,7 +327,7 @@ navServers.addEventListener('click',async event=>{
 
 navFriends.addEventListener('click',async event=>{
   event.preventDefault();
-  showDirectory(friendsView,'Friends','Your added friends','+ Add Friend',navFriends);
+  showDirectory(friendsView,'Friends','Your friends and friend requests','+ Add Friend',navFriends);
   try{ await loadFriends(); }
   catch(error){ friendList.innerHTML='<div class="directory-empty"><strong>Unable to load friends</strong><span>'+String(error.message||error)+'</span></div>'; }
 });
