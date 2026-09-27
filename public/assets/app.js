@@ -89,6 +89,7 @@ async function selectChannel(channel){
   form.querySelector('button').disabled=channel.kind!=='text';
 
   renderChannels();
+  if(window.setVoiceChannel) window.setVoiceChannel(channel);
 
   try{
     await loadMessages();
