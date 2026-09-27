@@ -12,8 +12,8 @@ $appName = (string) env('APP_NAME', 'Grewire');
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= htmlspecialchars($appName, ENT_QUOTES, 'UTF-8') ?></title>
-    <link rel="stylesheet" href="/assets/app.css?v=2026092704">
-    <link rel="stylesheet" href="/assets/voice.css?v=2026092704">
+    <link rel="stylesheet" href="/assets/app.css?v=2026092705">
+    <link rel="stylesheet" href="/assets/voice.css?v=2026092705">
 </head>
 <body>
 <div class="app-shell">
@@ -29,10 +29,10 @@ $appName = (string) env('APP_NAME', 'Grewire');
         </div>
     </header>
 
-    <nav class="subnav">
-        <a class="active" href="#" onclick="return false">Chat</a>
-        <a href="#" onclick="return false">Voice</a>
-        <a href="#" onclick="return false">Servers</a>
+    <nav class="subnav" id="main-nav">
+        <a class="active" href="#" id="nav-chat">Chat</a>
+        <a href="#" id="nav-servers">Servers</a>
+        <a href="#" id="nav-friends">Friends</a>
     </nav>
 
     <div class="layout">
@@ -62,13 +62,29 @@ $appName = (string) env('APP_NAME', 'Grewire');
         <main class="main">
             <div class="page-title">
                 <div>
-                    <h1>Grewire</h1>
-                    <div class="page-subtitle">Your conversations</div>
+                    <h1 id="page-heading">Grewire</h1>
+                    <div class="page-subtitle" id="page-subtitle">Your conversations</div>
                 </div>
-                <a class="btn btn-primary" href="#" onclick="return false">+ New Channel</a>
+                <a class="btn btn-primary" id="page-action" href="#" onclick="return false">+ New Channel</a>
             </div>
 
-            <div class="chat-panel">
+            <section class="directory-panel hidden" id="servers-view">
+                <div class="panel-header">
+                    <div class="panel-header-left"><strong>Servers</strong></div>
+                    <span class="panel-header-meta">Servers you are in</span>
+                </div>
+                <div class="directory-list" id="server-list"></div>
+            </section>
+
+            <section class="directory-panel hidden" id="friends-view">
+                <div class="panel-header">
+                    <div class="panel-header-left"><strong>Friends</strong></div>
+                    <span class="panel-header-meta">Your added friends</span>
+                </div>
+                <div class="directory-list" id="friend-list"></div>
+            </section>
+
+            <div class="chat-panel" id="chat-view">
                 <div class="panel-header">
                     <div class="panel-header-left">
                         <span>#</span>
@@ -102,7 +118,7 @@ $appName = (string) env('APP_NAME', 'Grewire');
     </div>
 </div>
 
-<script src="/assets/app.js?v=2026092704" defer></script>
-<script src="/assets/voice.js?v=2026092704" defer></script>
+<script src="/assets/app.js?v=2026092705" defer></script>
+<script src="/assets/voice.js?v=2026092705" defer></script>
 </body>
 </html>
