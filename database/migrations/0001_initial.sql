@@ -1,0 +1,11 @@
+BEGIN;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE TABLE users (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), username VARCHAR(32) NOT NULL UNIQUE, display_name VARCHAR(64) NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE TABLE servers (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name VARCHAR(100) NOT NULL, owner_user_id UUID REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE TABLE server_members (server_id UUID NOT NULL REFERENCES servers(id) ON DELETE CASCADE, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY(server_id,user_id));
+CREATE TABLE channels (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), server_id UUID NOT NULL REFERENCES servers(id) ON DELETE CASCADE, name VARCHAR(100) NOT NULL, kind VARCHAR(16) NOT NULL DEFAULT 'text' CHECK(kind IN ('text','voice')), position INTEGER NOT NULL DEFAULT 0, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), UNIQUE(server_id,name));
+CREATE TABLE messages (id BIGSERIAL PRIMARY KEY, channel_id UUID NOT NULL REFERENCES channels(id) ON DELETE CASCADE, author_user_id UUID REFERENCES users(id) ON DELETE SET NULL, body TEXT NOT NULL CHECK(char_length(body) BETWEEN 1 AND 4000), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE INDEX idx_server_members_user ON server_members(user_id);
+CREATE INDEX idx_channels_server_position ON channels(server_id,position,id);
+CREATE INDEX idx_messages_channel_created ON messages(channel_id,created_at DESC,id DESC);
+COMMIT;
