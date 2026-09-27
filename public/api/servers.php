@@ -9,6 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     json_response(['ok' => false, 'error' => 'Method not allowed.'], 405);
 }
 
+$user = require_user();
+
 try {
     $workspace = Grewire\DevWorkspace::ensure(
         db()->pdo(),
