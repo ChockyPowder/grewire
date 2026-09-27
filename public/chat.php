@@ -81,7 +81,22 @@ $appName = (string) env('APP_NAME', 'Grewire');
                     <div class="panel-header-left"><strong>Friends</strong></div>
                     <span class="panel-header-meta">Your added friends</span>
                 </div>
-                <div class="directory-list" id="friend-list"></div>
+                <div class="friends-toolbar">
+  <input id="friend-search" placeholder="Search by username or display name…" maxlength="64">
+  <button class="btn btn-primary" id="friend-search-button" type="button">Search</button>
+</div>
+<div class="friends-section">
+  <div class="friends-section-title">Search results</div>
+  <div class="directory-list" id="friend-search-list"></div>
+</div>
+<div class="friends-section">
+  <div class="friends-section-title">Friend requests</div>
+  <div class="directory-list" id="friend-request-list"></div>
+</div>
+<div class="friends-section">
+  <div class="friends-section-title">Friends</div>
+  <div class="directory-list" id="friend-list"></div>
+</div>
             </section>
 
             <div class="chat-panel" id="chat-view">
