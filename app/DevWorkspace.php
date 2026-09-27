@@ -17,15 +17,18 @@ final class DevWorkspace
             $userStmt = $pdo->prepare(
                 'INSERT INTO users (username, display_name)
                  VALUES (:username, :display_name)
-                 ON CONFLICT (username)
-                 DO UPDATE SET display_name = EXCLUDED.display_name
-                 RETURNING id, username, display_name'
+                 ON CONFLICT (username) DO NOTHING'
             );
             $userStmt->execute([
                 'username' => $username,
                 'display_name' => $username,
             ]);
-            $user = $userStmt->fetch();
+
+            $userLookup = $pdo->prepare(
+                'SELECT id, username, display_name FROM users WHERE username = :username LIMIT 1'
+            );
+            $userLookup->execute(['username' => $username]);
+            $user = $userLookup->fetch();
 
             if (!$user) {
                 throw new RuntimeException('Unable to create development user.');
