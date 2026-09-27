@@ -77,6 +77,15 @@ checkout_app() {
         log "Installing PHP dependencies"
         composer install --working-dir="$APP_DIR" --no-dev --prefer-dist --no-interaction --optimize-autoloader
     fi
+
+    if [[ -f "$APP_DIR/database/migrations/0003_auth.sql" ]]; then
+        if ! PGPASSWORD="$db_password" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='users' AND column_name='password_hash'" | grep -q 1; then
+            log "Applying authentication database migration"
+            PGPASSWORD="$db_password" psql -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$APP_DIR/database/migrations/0003_auth.sql"
+        else
+            log "Authentication schema already exists; migration skipped"
+        fi
+    fi
 }
 
 configure_database() {
