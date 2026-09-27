@@ -78,14 +78,6 @@ checkout_app() {
         composer install --working-dir="$APP_DIR" --no-dev --prefer-dist --no-interaction --optimize-autoloader
     fi
 
-    if [[ -f "$APP_DIR/database/migrations/0003_auth.sql" ]]; then
-        if ! PGPASSWORD="$db_password" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='users' AND column_name='password_hash'" | grep -q 1; then
-            log "Applying authentication database migration"
-            PGPASSWORD="$db_password" psql -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$APP_DIR/database/migrations/0003_auth.sql"
-        else
-            log "Authentication schema already exists; migration skipped"
-        fi
-    fi
 }
 
 configure_database() {
@@ -144,6 +136,15 @@ EOF
             PGPASSWORD="$db_password" psql -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$APP_DIR/database/migrations/0002_social.sql"
         else
             log "Social schema already exists; migration skipped"
+        fi
+    fi
+
+    if [[ -f "$APP_DIR/database/migrations/0003_auth.sql" ]]; then
+        if ! PGPASSWORD="$db_password" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='users' AND column_name='password_hash'" | grep -q 1; then
+            log "Applying authentication database migration"
+            PGPASSWORD="$db_password" psql -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$APP_DIR/database/migrations/0003_auth.sql"
+        else
+            log "Authentication schema already exists; migration skipped"
         fi
     fi
 }
@@ -229,7 +230,7 @@ summary() {
     printf 'Database:  PostgreSQL\n'
     printf 'Config:    %s/.env\n' "$APP_DIR"
     printf '\n'
-    printf '\033[1;33mWARNING:\033[0m Authentication is not implemented yet. DEV_IDENTITY is enabled. Do not expose this build to untrusted users until authentication/authorization is added.\n'
+    printf 'Authentication: session login/register enabled\n'
 }
 
 main() {
