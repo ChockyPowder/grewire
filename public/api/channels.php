@@ -9,8 +9,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     json_response(['ok' => false, 'error' => 'Method not allowed.'], 405);
 }
 
+$user = require_user();
+
 try {
-    $identity = dev_identity();
+    $identity = ['username' => $user['username'], 'id' => $user['id']];
     $workspace = Grewire\DevWorkspace::ensure(
         db()->pdo(),
         (string) $identity['username']
