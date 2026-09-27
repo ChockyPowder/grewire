@@ -29,7 +29,7 @@ function participantEl(peerId,name,local=false){
 function renderVoiceParticipants(){
   voiceParticipants.innerHTML='';
   if(localStream && myPeerId){
-    voiceParticipants.appendChild(participantEl(myPeerId,'local-user',true));
+    voiceParticipants.appendChild(participantEl(myPeerId,window.GREWIRE_USER_NAME||'User',true));
   }
   for(const [peerId,peer] of peers){
     voiceParticipants.appendChild(participantEl(peerId,peer.name||'User'));
@@ -185,7 +185,7 @@ async function joinVoice(){
     voiceSocket=new WebSocket(voiceWsUrl());
 
     voiceSocket.onopen=()=>{
-      sendVoice({type:'join',room:voiceChannel.id,name:'local-user'});
+      sendVoice({type:'join',room:voiceChannel.id,name:window.GREWIRE_USER_NAME||'User'});
     };
 
     voiceSocket.onmessage=async event=>{
