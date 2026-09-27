@@ -312,6 +312,13 @@ friendSearch?.addEventListener('keydown',event=>{
   }
 });
 
+pageAction.addEventListener('click',event=>{
+  if(navFriends.classList.contains('active')){
+    event.preventDefault();
+    friendSearch?.focus();
+  }
+});
+
 navChat.addEventListener('click',async event=>{
   event.preventDefault();
   showChatView();
