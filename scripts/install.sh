@@ -6,6 +6,7 @@ APP_GROUP="www-data"
 APP_DIR="/var/www/grewire"
 REPO_URL="https://github.com/ChockyPowder/grewire.git"
 BRANCH="main"
+USE_LOCAL_SOURCE="${GREWIRE_LOCAL_SOURCE:-}"
 
 DB_NAME="grewire"
 DB_USER="grewire"
@@ -51,7 +52,12 @@ create_app_user() {
 
 checkout_app() {
     log "Installing Grewire source"
-    if [[ ! -d "$APP_DIR/.git" ]]; then
+    if [[ -n "$USE_LOCAL_SOURCE" ]]; then
+        [[ -d "$USE_LOCAL_SOURCE" ]] || die "GREWIRE_LOCAL_SOURCE does not exist: $USE_LOCAL_SOURCE"
+        rm -rf "$APP_DIR"
+        cp -a "$USE_LOCAL_SOURCE" "$APP_DIR"
+        rm -rf "$APP_DIR/.git"
+    elif [[ ! -d "$APP_DIR/.git" ]]; then
         rm -rf "$APP_DIR"
         git clone --branch "$BRANCH" --single-branch "$REPO_URL" "$APP_DIR"
     else
