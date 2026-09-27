@@ -36,7 +36,7 @@ try {
                 m.id,
                 m.body,
                 m.created_at,
-                COALESCE(u.display_name, u.username, ''Deleted user'') AS author
+                COALESCE(u.display_name, u.username, 'Deleted user') AS author
              FROM messages m
              LEFT JOIN users u ON u.id = m.author_user_id
              WHERE m.channel_id = :channel_id
