@@ -43,6 +43,30 @@ function db(): Database {
     ]);
 }
 
-function dev_identity(): array {
-    return ['id'=>null,'username'=>(string)env('DEV_USERNAME','local-user'),'authenticated'=>false];
+function current_user(): ?array
+{
+    return Grewire\Auth::user(db()->pdo());
+}
+
+function require_user(): array
+{
+    return Grewire\Auth::requireUser(db()->pdo());
+}
+
+function dev_identity(): array
+{
+    $user = current_user();
+    if ($user) {
+        return [
+            'id' => $user['id'],
+            'username' => $user['username'],
+            'authenticated' => true,
+        ];
+    }
+
+    return [
+        'id' => null,
+        'username' => '',
+        'authenticated' => false,
+    ];
 }
