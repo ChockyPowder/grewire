@@ -215,3 +215,17 @@ button{cursor:pointer}
 .friends-section-title{padding:7px 12px;background:#ededed;border-bottom:1px solid #ccc;color:#666;font-size:11px;font-weight:bold}
 .directory-item .directory-actions{display:flex;gap:5px}
 .directory-item .directory-actions button{padding:4px 7px}
+
+.auth-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#eee}
+.auth-card{width:100%;max-width:390px;padding:28px;background:#fff;border:1px solid #aaa;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.auth-brand{display:inline-block;margin-bottom:18px}
+.auth-title{color:var(--purple);font-size:18px;font-weight:bold;margin-bottom:4px}
+.auth-subtitle{color:#777;font-size:11px;margin-bottom:16px}
+.auth-form{display:flex;flex-direction:column;gap:12px}
+.auth-form label{display:flex;flex-direction:column;gap:5px;color:#555;font-weight:bold;font-size:11px}
+.auth-form input{padding:8px;border:1px solid #aaa;background:#fff;color:#222}
+.auth-form input:focus{outline:1px solid #7b3fb1;border-color:#7b3fb1}
+.auth-submit{width:100%;margin-top:4px}
+.auth-error{margin-bottom:12px;padding:8px;border:1px solid #d2a4a4;background:#fff0f0;color:#9b2222;font-size:11px}
+.auth-switch{margin-top:16px;padding-top:12px;border-top:1px solid #ddd;color:#777;font-size:11px}
+.auth-switch a{font-weight:bold}
