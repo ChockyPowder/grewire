@@ -12,15 +12,11 @@ function valid_uuid(string $value): bool
     );
 }
 
-function find_dev_user(): array
+function find_authenticated_user(): array
 {
-    $identity = dev_identity();
-    $workspace = Grewire\DevWorkspace::ensure(
-        db()->pdo(),
-        (string) $identity['username']
-    );
-
-    return $workspace['user'];
+    $user = require_user();
+    Grewire\DevWorkspace::ensure(db()->pdo(), (string)$user['username']);
+    return $user;
 }
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -87,7 +83,7 @@ try {
             );
         }
 
-        $user = find_dev_user();
+        $user = find_authenticated_user();
 
         $stmt = $pdo->prepare(
             'INSERT INTO messages (channel_id, author_user_id, body)
