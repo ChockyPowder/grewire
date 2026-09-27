@@ -1,71 +1,78 @@
-const status=document.querySelector('#connection-status');
 const messages=document.querySelector('#messages');
 const form=document.querySelector('#message-form');
 const input=document.querySelector('#message-input');
-const nav=document.querySelector('nav');
+const textNav=document.querySelector('#text-channels');
+const voiceNav=document.querySelector('#voice-channels');
+const channelTitle=document.querySelector('#channel-title');
+
 let channels=[];
 let activeChannel=null;
 let refreshTimer=null;
 
-function escapeHtml(value){
-  const div=document.createElement('div');
-  div.textContent=String(value ?? '');
-  return div.innerHTML;
-}
-
-function setStatus(state,text){
-  status.dataset.state=state;
-  status.querySelector('span:last-child').textContent=text;
-}
-
 function renderMessages(items){
   messages.innerHTML='';
+
   if(!items.length){
-    messages.innerHTML='<div class="empty-state">No messages yet. Say hello.</div>';
+    messages.innerHTML='<div class="empty-state"><strong>Welcome to the beginning of the chat.</strong><span>No messages here yet.</span></div>';
     return;
   }
 
   for(const message of items){
     const article=document.createElement('article');
     article.className='message';
-    article.innerHTML='<div class="avatar">L</div><div><strong></strong><time></time><p></p></div>';
+    article.innerHTML='<div class="message-avatar"></div><div class="message-content"><div class="message-meta"><strong></strong><time></time></div><div class="message-body"></div></div>';
+    article.querySelector('.message-avatar').textContent=(message.author||'U').slice(0,1).toUpperCase();
     article.querySelector('strong').textContent=message.author;
-    article.querySelector('time').textContent=new Date(message.created_at).toLocaleTimeString([],{
+    article.querySelector('time').textContent=new Date(message.created_at).toLocaleString([],{
+      month:'short',
+      day:'numeric',
       hour:'2-digit',
       minute:'2-digit'
     });
-    article.querySelector('p').textContent=message.body;
+    article.querySelector('.message-body').textContent=message.body;
     messages.appendChild(article);
   }
 
   messages.scrollTop=messages.scrollHeight;
+  updateMessageCount(items.length);
+}
+
+function updateMessageCount(count){
+  document.title=(activeChannel?('# '+activeChannel.name+' · '):'')+'Grewire';
 }
 
 function renderChannels(){
-  nav.innerHTML='';
+  textNav.innerHTML='';
+  voiceNav.innerHTML='';
 
   for(const channel of channels){
     const button=document.createElement('button');
     button.type='button';
-    button.className='channel'+(activeChannel?.id===channel.id?' active':'');
+    button.className='channel-button'+(activeChannel?.id===channel.id?' active':'');
     button.dataset.channelId=channel.id;
-    button.textContent=(channel.kind==='voice'?'◉ ':'# ')+channel.name;
+    button.innerHTML='<span class="channel-icon"></span><span class="channel-name"></span>';
+    button.querySelector('.channel-icon').textContent=channel.kind==='voice'?'◉':'#';
+    button.querySelector('.channel-name').textContent=channel.name;
+
     button.addEventListener('click',()=>selectChannel(channel));
-    nav.appendChild(button);
+
+    if(channel.kind==='voice') voiceNav.appendChild(button);
+    else textNav.appendChild(button);
   }
 }
 
 async function loadMessages(){
-  if(!activeChannel) return;
+  if(!activeChannel || activeChannel.kind!=='text') return;
 
   const response=await fetch('/api/messages.php?channel_id='+encodeURIComponent(activeChannel.id),{
     headers:{Accept:'application/json'},
     cache:'no-store'
   });
+
   const payload=await response.json();
 
   if(!response.ok || !payload.ok){
-    throw new Error(payload.error || 'Unable to load messages');
+    throw new Error(payload.error||'Unable to load messages');
   }
 
   renderMessages(payload.messages);
@@ -73,30 +80,26 @@ async function loadMessages(){
 
 async function selectChannel(channel){
   activeChannel=channel;
-  document.querySelector('.channel-title').textContent=
-    (channel.kind==='voice'?'◉ ':'# ')+channel.name;
-
-  document.querySelector('.chat-header p').textContent=
-    channel.kind==='voice'
-      ? 'Voice channel · voice/WebRTC coming next'
-      : 'Early-stage Grewire workspace';
+  channelTitle.textContent=channel.name;
 
   input.placeholder=channel.kind==='text'
     ? 'Message #'+channel.name+'…'
-    : 'Voice channel — messaging disabled';
+    : 'Join the voice channel to talk';
 
-  input.disabled=channel.kind!=='text';
-  form.querySelector('button').disabled=channel.kind!=='text';
+  const isText=channel.kind==='text';
+  input.disabled=!isText;
+  form.querySelector('.composer-emoji').disabled=!isText;
 
   renderChannels();
-  if(window.setVoiceChannel) window.setVoiceChannel(channel);
 
-  try{
+  if(window.setVoiceChannel){
+    window.setVoiceChannel(channel);
+  }
+
+  if(isText){
     await loadMessages();
-    setStatus('ok','PostgreSQL connected');
-  }catch(error){
-    setStatus('error','Unable to load channel');
-    console.error(error);
+  }else{
+    messages.innerHTML='<div class="voice-placeholder"><div class="voice-placeholder-icon">◉</div><strong>'+channel.name+'</strong><span>Join the voice channel below to start talking.</span></div>';
   }
 }
 
@@ -105,16 +108,19 @@ async function loadWorkspace(){
     headers:{Accept:'application/json'},
     cache:'no-store'
   });
+
   const payload=await response.json();
 
   if(!response.ok || !payload.ok){
-    throw new Error(payload.error || 'Unable to load workspace');
+    throw new Error(payload.error||'Unable to load workspace');
   }
 
-  channels=payload.channels;
+  channels=payload.channels||[];
+  if(!channels.length) throw new Error('No channels are available.');
+
   renderChannels();
 
-  const firstText=channels.find(channel=>channel.kind==='text') || channels[0];
+  const firstText=channels.find(channel=>channel.kind==='text')||channels[0];
   await selectChannel(firstText);
 }
 
@@ -126,38 +132,33 @@ form.addEventListener('submit',async event=>{
   const body=input.value.trim();
   if(!body) return;
 
+  const sendButton=form.querySelector('.composer-add');
   input.disabled=true;
-  form.querySelector('button').disabled=true;
 
   try{
-    const response=await fetch(
-      '/api/messages.php?channel_id='+encodeURIComponent(activeChannel.id),
-      {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          Accept:'application/json'
-        },
-        body:JSON.stringify({body})
-      }
-    );
+    const response=await fetch('/api/messages.php?channel_id='+encodeURIComponent(activeChannel.id),{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        Accept:'application/json'
+      },
+      body:JSON.stringify({body})
+    });
 
     const payload=await response.json();
 
     if(!response.ok || !payload.ok){
-      throw new Error(payload.error || 'Unable to send message');
+      throw new Error(payload.error||'Unable to send message');
     }
 
     input.value='';
     await loadMessages();
-    setStatus('ok','PostgreSQL connected');
   }catch(error){
-    setStatus('error','Message failed');
     console.error(error);
     alert(error.message);
   }finally{
     input.disabled=false;
-    form.querySelector('button').disabled=false;
+    void sendButton;
     input.focus();
   }
 });
@@ -167,17 +168,17 @@ async function start(){
     await loadWorkspace();
 
     if(refreshTimer) clearInterval(refreshTimer);
+
     refreshTimer=setInterval(async()=>{
       try{
         await loadMessages();
-        setStatus('ok','PostgreSQL connected');
       }catch(error){
-        setStatus('error','PostgreSQL unavailable');
+        console.warn('Message refresh failed:',error);
       }
     },3000);
   }catch(error){
-    setStatus('error','Grewire unavailable');
-    console.error(error);
+    console.error('Grewire startup failed:',error);
+    messages.innerHTML='<div class="startup-error"><strong>Unable to connect to Grewire</strong><span>'+String(error.message||error)+'</span><button type="button" onclick="location.reload()">Retry</button></div>';
   }
 }
 
