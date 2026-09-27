@@ -1,0 +1,17 @@
+{
+  "name": "chockypowder/grewire",
+  "description": "Private invite-only community and real-time communication platform.",
+  "type": "project",
+  "license": "Proprietary",
+  "require": {
+    "php": "^8.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Grewire\\\\": "app/"
+    }
+  },
+  "scripts": {
+    "serve": "php -S localhost:8080 -t public"
+  }
+}
