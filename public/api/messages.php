@@ -19,6 +19,7 @@ function find_authenticated_user(): array
     return $user;
 }
 
+$user = require_user();
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $channelId = trim((string) ($_GET['channel_id'] ?? ''));
 
