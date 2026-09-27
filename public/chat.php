@@ -12,8 +12,8 @@ $appName = (string) env('APP_NAME', 'Grewire');
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= htmlspecialchars($appName, ENT_QUOTES, 'UTF-8') ?></title>
-    <link rel="stylesheet" href="/assets/app.css?v=2026092705">
-    <link rel="stylesheet" href="/assets/voice.css?v=2026092705">
+    <link rel="stylesheet" href="/assets/app.css?v=2026092706">
+    <link rel="stylesheet" href="/assets/voice.css?v=2026092706">
 </head>
 <body>
 <div class="app-shell">
@@ -133,7 +133,7 @@ $appName = (string) env('APP_NAME', 'Grewire');
     </div>
 </div>
 
-<script src="/assets/app.js?v=2026092705" defer></script>
-<script src="/assets/voice.js?v=2026092705" defer></script>
+<script src="/assets/app.js?v=2026092706" defer></script>
+<script src="/assets/voice.js?v=2026092706" defer></script>
 </body>
 </html>
